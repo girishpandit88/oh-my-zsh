@@ -11,22 +11,37 @@ function box_name {
     [ -f ~/.box-name ] && cat ~/.box-name || echo $HOST
 }
 
+SEGMENT_SEPARATOR=$'\ue0b0'
+prompt_segment() {
+  local bg fg
+  [[ -n $1 ]] && bg="%K{$1}" || bg="%k"
+  [[ -n $2 ]] && fg="%F{$2}" || fg="%f"
+  if [[ $CURRENT_BG != 'NONE' && $1 != $CURRENT_BG ]]; then
+    echo -n " %{$bg%F{$CURRENT_BG}%}$SEGMENT_SEPARATOR%{$fg%}"
+  else
+    echo -n "%{$bg%}%{$fg%}"
+  fi
+  CURRENT_BG=$1
+  [[ -n $3 ]] && echo -n $3
+}
 # Directory info.
-local current_dir='${PWD/#$HOME/~}'
+#local current_dir='${PWD/#$HOME/~}'
+
+local current_dir='%2d'
 
 # VCS
-YS_VCS_PROMPT_PREFIX1=" %{$fg[white]%}on%{$reset_color%} "
-YS_VCS_PROMPT_PREFIX2=":%{$fg[cyan]%}"
+YS_VCS_PROMPT_PREFIX1="%{$fg[white]%}on"
+YS_VCS_PROMPT_PREFIX2=":%{$fg[magenta]%}"
 YS_VCS_PROMPT_SUFFIX="%{$reset_color%}"
-YS_VCS_PROMPT_DIRTY=" %{$fg[red]%}x"
-YS_VCS_PROMPT_CLEAN=" %{$fg[green]%}o"
+YS_VCS_PROMPT_DIRTY=" %{$fg[red]%}Χ"
+YS_VCS_PROMPT_CLEAN=" %{$fg[green]%}✔"
 
 # Git info.
 local git_info='$(git_prompt_info)'
-ZSH_THEME_GIT_PROMPT_PREFIX="${YS_VCS_PROMPT_PREFIX1}git${YS_VCS_PROMPT_PREFIX2}"
+ZSH_THEME_GIT_PROMPT_PREFIX="$(prompt_segment yellow back)${YS_VCS_PROMPT_PREFIX1}$(prompt_segment red green)%{$fg[blue]%}git${YS_VCS_PROMPT_PREFIX2}"
 ZSH_THEME_GIT_PROMPT_SUFFIX="$YS_VCS_PROMPT_SUFFIX"
-ZSH_THEME_GIT_PROMPT_DIRTY="$YS_VCS_PROMPT_DIRTY"
-ZSH_THEME_GIT_PROMPT_CLEAN="$YS_VCS_PROMPT_CLEAN"
+ZSH_THEME_GIT_PROMPT_DIRTY="$(prompt_segment yellow back)$YS_VCS_PROMPT_DIRTY$(prompt_segment yellow black)"
+ZSH_THEME_GIT_PROMPT_CLEAN="$(prompt_segment green black)$YS_VCS_PROMPT_CLEAN$(prompt_segment green black)"
 
 # HG info
 local hg_info='$(ys_hg_prompt_info)'
@@ -43,18 +58,19 @@ ys_hg_prompt_info() {
 		echo -n "$YS_VCS_PROMPT_SUFFIX"
 	fi
 }
-
+function collapse_pwd {
+    echo $(pwd | sed -e "s,^$HOME,~,")
+}
 # Prompt format: \n # USER at MACHINE in DIRECTORY on git:BRANCH STATE [TIME] \n $ 
-PROMPT="
-%{$terminfo[bold]$fg[blue]%}#%{$reset_color%} \
-%{$fg[cyan]%}%n \
-%{$fg[white]%}at \
-%{$fg[green]%}$(box_name) \
-%{$fg[white]%}in \
-%{$terminfo[bold]$fg[yellow]%}${current_dir}%{$reset_color%}\
+PROMPT="%{$terminfo[bold]$fg[blue]%}#\
+$(prompt_segment cyan yellow)%{$fg[154]%}%n\
+%{$fg[white]%}@\
+%{$fg[red]%}%m\
+$(prompt_segment red green)%{$fg[white]%}in\
+$(prompt_segment blue black)%{$terminfo[bold]$fg[yellow]%}${current_dir}\
 ${hg_info}\
 ${git_info} \
-%{$fg[white]%}[%*]
+%{$fg[white]%}
 %{$terminfo[bold]$fg[red]%}$ %{$reset_color%}"
 
 if [[ "$USER" == "root" ]]; then
