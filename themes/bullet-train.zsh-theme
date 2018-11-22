@@ -303,7 +303,7 @@ prompt_end() {
 # Context: user@hostname (who am I and where am I)
 context() {
   local user="$(whoami)"
-  [[ "$user" != "$BULLETTRAIN_CONTEXT_DEFAULT_USER" || -n "$BULLETTRAIN_IS_SSH_CLIENT" ]] && echo -n "${user}@%m"
+  [[ "$user" != "$BULLETTRAIN_CONTEXT_DEFAULT_USER" || -n "$BULLETTRAIN_IS_SSH_CLIENT" ]] && echo -n "unknown_programmer@%m"
 }
 prompt_context() {
   [[ $BULLETTRAIN_CONTEXT_SHOW == false ]] && return
